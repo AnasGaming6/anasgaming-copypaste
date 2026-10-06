@@ -6,6 +6,8 @@
     <title>أنس جيمينج - النظام الاحترافي المتقدم</title>
     <!-- استدعاء مكتبة تلوين الأكواد Prism.js -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet">
+    <!-- استدعاء مكتبة الضغط لاستيعاب آلاف النصوص -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background-color: #0e070b; color: #dedef1; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; overflow-x: hidden; }
@@ -92,7 +94,7 @@
         </header>
 
         <div class="textarea-wrapper">
-            <textarea id="userInput" placeholder="اكتب أو الصق النص أو الكود هنا..." oninput="updatestats()"></textarea>
+            <textarea id="userInput" placeholder="اكتب أو الصق النص هنا (يدعم أحجام ضخمة بمختلف اللغات)..." oninput="updatestats()"></textarea>
             <div class="stats-bar">
                 <span id="charCount">عدد الحروف: 0</span>
                 <span id="lineCount">عدد الأسطر: 0</span>
@@ -149,7 +151,7 @@
         </div>
 
         <div class="fixed-copy-bar">
-            <!-- زر نسخ النص (تمت إزالة كلمة فقط بناءً على طلبك) -->
+            <!-- زر نسخ النص -->
             <button id="fixedCopyBtn" class="fixed-copy-btn" onclick="copyMainText()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 نسخ النص
@@ -223,9 +225,10 @@
             }
         }
 
+        // استبدال نظام التشفير القديم بضغط LZ-String لاستيعاب آلاف النصوص مع الحفاظ على التوافق التام
         function safeEncode(str) {
             try {
-                return encodeURIComponent(btoa(unescape(encodeURIComponent(str))));
+                return LZString.compressToEncodedURIComponent(str);
             } catch (err) {
                 return "";
             }
@@ -233,6 +236,9 @@
 
         function safeDecode(encodedStr) {
             try {
+                // محاولة الفك عبر LZ-String أولاً، وإذا فشل يعود للطريقة القديمة كاحتياط
+                let res = LZString.decompressFromEncodedURIComponent(encodedStr);
+                if (res !== null && res !== "") return res;
                 return decodeURIComponent(escape(atob(decodeURIComponent(encodedStr))));
             } catch (err) {
                 return null;
